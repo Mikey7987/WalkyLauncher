@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the content browser (mods, resource packs, shaders, modpacks) and the installed content manager -->
+<resources>
+    <string name="content_type_modpacks">Modpacks</string>
+    <string name="content_type_mods">Mods</string>
+    <string name="content_type_resource_packs">Resource packs</string>
+    <string name="content_type_shaders">Shaders</string>
+
+    <string name="hint_search_mods">Search for mods</string>
+    <string name="hint_search_resource_packs">Search for resource packs</string>
+    <string name="hint_search_shaders">Search for shaders</string>
+    <string name="search_content_no_result">Nothing found</string>
+    <string name="search_content_error">Failed to load results</string>
+
+    <string name="content_target_install_to">Install to: %1$s</string>
+    <string name="content_target_modpack_hint">Modpacks create their own profile</string>
+    <string name="content_target_change">Change</string>
+    <string name="content_target_dialog_title">Install to which profile?</string>
+
+    <string name="content_install_downloading">Downloading %1$s (%2$.2f MB / %3$.2f MB)</string>
+    <string name="content_install_done">Installed %1$s to %2$s</string>
+    <string name="content_install_failed">Failed to install the content</string>
+
+    <string name="filter_loader_label">Mod loader</string>
+    <string-array name="content_loader_names">
+        <item>Any</item>
+        <item>Fabric</item>
+        <item>Forge</item>
+        <item>NeoForge</item>
+        <item>Quilt</item>
+    </string-array>
+    <!-- Same order as the names. The empty string means "any loader" -->
+    <string-array name="content_loader_values" translatable="false">
+        <item></item>
+        <item>fabric</item>
+        <item>forge</item>
+        <item>neoforge</item>
+        <item>quilt</item>
+    </string-array>
+
+    <string name="content_installed_title">Installed content</string>
+    <string name="content_installed_profile">Profile: %1$s</string>
+    <string name="content_installed_empty">Nothing installed here yet</string>
+    <string name="content_installed_add">Add from device</string>
+    <string name="content_installed_delete">Delete</string>
+    <string name="content_installed_delete_title">Delete %1$s?</string>
+    <string name="content_installed_delete_message">This removes it from the profile and cannot be undone.</string>
+    <string name="content_installed_deleted">Deleted %1$s</string>
+    <string name="content_installed_added">Added %1$d file(s)</string>
+    <string name="content_installed_add_failed">%1$d file(s) could not be added. Mods must be .jar files, resource packs and shaders .zip files.</string>
+    <string name="content_installed_toggle_failed">Could not change %1$s</string>
+    <string name="content_installed_folder">Folder</string>
+    <string name="content_installed_disabled">Disabled</string>
+    <string name="main_browse_content">Get mods, packs and shaders</string>
+    <string name="main_installed_content">Manage installed content</string>
+
+    <!-- Virtual mouse cursor -->
+    <string name="preference_cursor_style_title">Cursor style</string>
+    <string name="preference_cursor_custom_title">Use your own cursor image</string>
+    <string name="preference_cursor_custom_summary">Pick a PNG image. It is scaled down and used when the style is set to Custom.</string>
+    <string name="preference_cursor_custom_done">Custom cursor saved. Set the style to Custom to use it.</string>
+    <string name="preference_cursor_custom_failed">Could not read that image</string>
+    <string name="preference_cursor_dynamic_title">Dynamic cursor</string>
+    <string name="preference_cursor_dynamic_summary">The cursor shrinks and glows while you click, grows slightly while moving, and fades when idle.</string>
+    <string-array name="cursor_style_names">
+        <item>Default</item>
+        <item>Arrow</item>
+        <item>Dot</item>
+        <item>Ring</item>
+        <item>Crosshair</item>
+        <item>Custom</item>
+    </string-array>
+    <string-array name="cursor_style_values" translatable="false">
+        <item>default</item>
+        <item>arrow</item>
+        <item>dot</item>
+        <item>ring</item>
+        <item>crosshair</item>
+        <item>custom</item>
+    </string-array>
+</resources>

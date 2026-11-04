@@ -21,6 +21,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.modloaders.modpacks.models.ContentType;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -43,6 +44,8 @@ public class MainMenuFragment extends Fragment {
         Button mDiscordButton = view.findViewById(R.id.discord_button);
         Button mCustomControlButton = view.findViewById(R.id.custom_control_button);
         Button mInstallJarButton = view.findViewById(R.id.install_jar_button);
+        Button mBrowseContentButton = view.findViewById(R.id.browse_content_button);
+        Button mInstalledContentButton = view.findViewById(R.id.installed_content_button);
         Button mShareLogsButton = view.findViewById(R.id.share_logs_button);
         Button mOpenDirectoryButton = view.findViewById(R.id.open_files_button);
 
@@ -53,6 +56,17 @@ public class MainMenuFragment extends Fragment {
         mNewsButton.setOnClickListener(v -> Tools.openURL(requireActivity(), Tools.URL_HOME));
         mDiscordButton.setOnClickListener(v -> Tools.openURL(requireActivity(), getString(R.string.discord_invite)));
         mCustomControlButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), CustomControlsActivity.class)));
+        mBrowseContentButton.setOnClickListener(v -> {
+            if(Tools.isLocalProfile(v.getContext()) || Tools.isDemoProfile(v.getContext())) {
+                Toast.makeText(v.getContext(), R.string.toast_not_available_demo, Toast.LENGTH_LONG).show();
+                return;
+            }
+            Bundle args = new Bundle(1);
+            args.putInt(SearchModFragment.ARG_CONTENT_TYPE, ContentType.MOD);
+            Tools.swapFragment(requireActivity(), SearchModFragment.class, SearchModFragment.TAG, args);
+        });
+        mInstalledContentButton.setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), InstalledContentFragment.class, InstalledContentFragment.TAG, null));
         mInstallJarButton.setOnClickListener(v -> runInstallerWithConfirmation(false));
         mInstallJarButton.setOnLongClickListener(v->{
             runInstallerWithConfirmation(true);

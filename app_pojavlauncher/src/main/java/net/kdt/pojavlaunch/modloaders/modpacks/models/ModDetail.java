@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.modloaders.modpacks.models;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Arrays;
 
@@ -12,8 +13,12 @@ public class ModDetail extends ModItem {
     public String[] versionUrls;
     /* SHA 1 hashes, null if a hash is unavailable */
     public String[] versionHashes;
+    /* Source specific version ids. Only filled in by sources that can use them (Modrinth), may be null */
+    @Nullable public String[] versionIds;
     public ModDetail(ModItem item, String[] versionNames, String[] mcVersionNames, String[] versionUrls, String[] hashes) {
-        super(item.apiSource, item.isModpack, item.id, item.title, item.description, item.imageUrl);
+        super(item.apiSource, item.contentType, item.id, item.title, item.description, item.imageUrl);
+        this.filterMcVersion = item.filterMcVersion;
+        this.filterLoader = item.filterLoader;
         this.versionNames = versionNames;
         this.mcVersionNames = mcVersionNames;
         this.versionUrls = versionUrls;
@@ -21,7 +26,8 @@ public class ModDetail extends ModItem {
 
         // Add the mc version to the version model
         for (int i=0; i<versionNames.length; i++){
-            if (!versionNames[i].contains(mcVersionNames[i]))
+            // A source may not be able to tell which Minecraft version a file is for
+            if (mcVersionNames[i] != null && !versionNames[i].contains(mcVersionNames[i]))
                 versionNames[i] += " - " + mcVersionNames[i];
         }
     }
@@ -38,7 +44,7 @@ public class ModDetail extends ModItem {
                 ", description='" + description + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", apiSource=" + apiSource +
-                ", isModpack=" + isModpack +
+                ", contentType=" + contentType +
                 '}';
     }
 }

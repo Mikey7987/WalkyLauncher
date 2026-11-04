@@ -2,17 +2,32 @@ package net.kdt.pojavlaunch.prefs.screens;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import androidx.preference.PreferenceCategory;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.customcontrols.mouse.CursorStyle;
 import net.kdt.pojavlaunch.prefs.CustomSeekBarPreference;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 public class LauncherPreferenceControlFragment extends LauncherPreferenceFragment {
     private boolean mGyroAvailable = false;
+    private final ActivityResultLauncher<String> mCursorImagePicker =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), this::importCursorImage);
     @Override
     public void onCreatePreferences(Bundle b, String str) {
         // Get values
@@ -71,7 +86,43 @@ public class LauncherPreferenceControlFragment extends LauncherPreferenceFragmen
                 CustomSeekBarPreference.class);
         gyroSampleRateSeek.setValue(gyroSampleRate);
         gyroSampleRateSeek.setSuffix(" ms");
+        requirePreference("cursor_custom_pick").setOnPreferenceClickListener(preference -> {
+            mCursorImagePicker.launch("image/*");
+            return true;
+        });
         computeVisibility();
+    }
+
+    /** Scale the picked image down (cursors are small) and store it as the custom cursor */
+    private void importCursorImage(Uri uri) {
+        if (uri == null) return;
+        Context context = requireContext();
+        Bitmap bitmap = null;
+        try (InputStream in = context.getContentResolver().openInputStream(uri)) {
+            if (in != null) bitmap = BitmapFactory.decodeStream(in);
+        } catch (IOException | RuntimeException ignored) {}
+        if (bitmap == null) {
+            Toast.makeText(context, R.string.preference_cursor_custom_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final int max = 128;
+        int w = bitmap.getWidth(), h = bitmap.getHeight();
+        if (w > max || h > max) {
+            float ratio = Math.min(max / (float) w, max / (float) h);
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, Math.max(1, Math.round(w * ratio)),
+                    Math.max(1, Math.round(h * ratio)), true);
+            if (scaled != bitmap) bitmap.recycle();
+            bitmap = scaled;
+        }
+        File target = CursorStyle.getCustomFile();
+        try (FileOutputStream out = new FileOutputStream(target)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            Toast.makeText(context, R.string.preference_cursor_custom_done, Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Toast.makeText(context, R.string.preference_cursor_custom_failed, Toast.LENGTH_SHORT).show();
+        } finally {
+            bitmap.recycle();
+        }
     }
 
     @Override

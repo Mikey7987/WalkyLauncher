@@ -3,13 +3,21 @@
     <color name="control_button_color">#4CC4C4C4</color>
     <color name="control_button_pressed_color">#4D000000</color>
 
-    <color name="minebutton_color">#57CC33</color>
-    <color name="background_app">#181818</color>
+    <color name="minebutton_color">#4ADE80</color>
+    <color name="background_app">#11141A</color>
     <color name="divider">@color/background_overlay</color>
-    <color name="background_overlay">#464646</color>
-    <color name="background_status_bar">#242424</color>
-    <color name="background_bottom_bar">#232323</color>
+    <color name="background_overlay">#2A303B</color>
+    <color name="background_status_bar">#0C0E13</color>
+    <color name="background_bottom_bar">#171B23</color>
 
     <color name="primary_text">#FFFFFF</color>
     <color name="secondary_text">#B2B2B2</color>
+
+    <!-- Launcher palette -->
+    <color name="accent">#4ADE80</color>
+    <color name="accent_pressed">#22C55E</color>
+    <color name="on_accent">#06210F</color>
+    <color name="surface">#161A21</color>
+    <color name="surface_raised">#1E232D</color>
+    <color name="outline">#2C3340</color>
 </resources>

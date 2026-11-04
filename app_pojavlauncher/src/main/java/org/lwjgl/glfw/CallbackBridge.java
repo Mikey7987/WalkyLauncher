@@ -93,6 +93,7 @@ public class CallbackBridge {
 
     public static void sendMouseKeycode(int button, int modifiers, boolean isDown) {
         // if (isGrabbing()) DEBUG_STRING.append("MouseGrabStrace: " + android.util.Log.getStackTraceString(new Throwable()) + "\n");
+        net.kdt.pojavlaunch.customcontrols.mouse.CursorState.onMouseButton(button, isDown);
         nativeSendMouseButton(button, isDown ? 1 : 0, modifiers);
     }
 

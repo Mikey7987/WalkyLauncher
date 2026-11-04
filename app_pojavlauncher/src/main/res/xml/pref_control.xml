@@ -97,6 +97,23 @@
             android:title="@string/preference_mouse_start_title"
             android:summary="@string/preference_mouse_start_description"
             />
+
+        <ListPreference
+            android:key="cursor_style"
+            android:title="@string/preference_cursor_style_title"
+            android:summary="%s"
+            android:entries="@array/cursor_style_names"
+            android:entryValues="@array/cursor_style_values"
+            android:defaultValue="default" />
+        <Preference
+            android:key="cursor_custom_pick"
+            android:title="@string/preference_cursor_custom_title"
+            android:summary="@string/preference_cursor_custom_summary" />
+        <SwitchPreference
+            android:key="cursor_dynamic"
+            android:defaultValue="false"
+            android:title="@string/preference_cursor_dynamic_title"
+            android:summary="@string/preference_cursor_dynamic_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory
