@@ -1187,11 +1187,30 @@ public class GLFW
     public static long glfwCreateCursor(@NativeType("const GLFWimage *") GLFWImage image, int xhot, int yhot) {
         return 4L;
     }
+    /** Standard cursors use their shape constant as the handle, so glfwSetCursor can tell them apart */
     public static long glfwCreateStandardCursor(int shape) {
-        return 4L;
+        return shape;
     }
     public static void glfwDestroyCursor(@NativeType("GLFWcursor *") long cursor) {}
-    public static void glfwSetCursor(@NativeType("GLFWwindow *") long window, @NativeType("GLFWcursor *") long cursor) {}
+
+    private static int sLastCursorShape = -1;
+    private static boolean sCursorShapeUnsupported = false;
+    /**
+     * Tell the launcher which cursor shape the game wants, so its virtual mouse can change shape.
+     * Custom (image) cursors and the default cursor (handle 0) are shown as the arrow.
+     */
+    public static void glfwSetCursor(@NativeType("GLFWwindow *") long window, @NativeType("GLFWcursor *") long cursor) {
+        int shape = (cursor >= GLFW_ARROW_CURSOR && cursor <= GLFW_NOT_ALLOWED_CURSOR)
+                ? (int) cursor : GLFW_ARROW_CURSOR;
+        if (shape == sLastCursorShape || sCursorShapeUnsupported) return;
+        sLastCursorShape = shape;
+        try {
+            CallbackBridge.nativeSetCursorShape(shape);
+        } catch (UnsatisfiedLinkError e) {
+            // An older launcher build without the native part. Cursor shapes just stay as they are.
+            sCursorShapeUnsupported = true;
+        }
+    }
 
     public static boolean glfwRawMouseMotionSupported() {
         // Should be not supported?

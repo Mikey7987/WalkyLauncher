@@ -61,7 +61,7 @@
     <string name="preference_cursor_custom_done">Custom cursor saved. Set the style to Custom to use it.</string>
     <string name="preference_cursor_custom_failed">Could not read that image</string>
     <string name="preference_cursor_dynamic_title">Dynamic cursor</string>
-    <string name="preference_cursor_dynamic_summary">The cursor shrinks and glows while you click, grows slightly while moving, and fades when idle.</string>
+    <string name="preference_cursor_dynamic_summary">The cursor changes shape (hand, text beam, resize, crosshair, not allowed) when the game or a mod asks for it, and shrinks and glows while you click. Vanilla Minecraft rarely asks for shapes; mods that add cursors do.</string>
     <string-array name="cursor_style_names">
         <item>Default</item>
         <item>Arrow</item>

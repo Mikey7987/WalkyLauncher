@@ -205,6 +205,12 @@ public class CallbackBridge {
         }, 16);
 
     }
+    //Called from JRE side when the game (or a mod) asks for another cursor shape
+    @SuppressWarnings("unused")
+    @Keep
+    private static void onCursorShapeChanged(final int glfwShape) {
+        net.kdt.pojavlaunch.customcontrols.mouse.CursorState.onShape(glfwShape);
+    }
     public static void addGrabListener(GrabListener listener) {
         synchronized (grabListeners) {
             listener.onGrabState(isGrabbing);

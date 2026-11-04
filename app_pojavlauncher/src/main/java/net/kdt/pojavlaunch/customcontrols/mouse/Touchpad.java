@@ -8,14 +8,13 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.util.SparseArray;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
 
 import net.kdt.pojavlaunch.GrabListener;
-import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import org.lwjgl.glfw.CallbackBridge;
@@ -23,29 +22,28 @@ import org.lwjgl.glfw.CallbackBridge;
 /**
  * Class dealing with the virtual mouse
  */
-public class Touchpad extends View implements GrabListener, AbstractTouchpad {
+public class Touchpad extends View implements GrabListener, AbstractTouchpad, CursorState.Listener {
+    private static final int PRESSED_TINT = 0xFF4ADE80;
+    private static final float PRESSED_SCALE = 0.85f;
+    /* Size of the shape cursors, before applying the mouse scale setting */
+    private static final int SHAPE_SIZE = 48;
+
     /* Whether the Touchpad should be displayed */
     private boolean mDisplayState;
     /* Mouse pointer icon used by the touchpad */
     private Drawable mMousePointerDrawable;
     private float mMouseX, mMouseY;
-    /* Dynamic cursor state */
-    private static final long IDLE_FADE_DELAY_MS = 2500;
-    private static final int PRESSED_TINT = 0xFF4ADE80;
+
+    /* Cursor appearance */
     private boolean mDynamic;
-    private boolean mCentered;
+    private Drawable mBaseDrawable;
+    private float mBaseHotX, mBaseHotY;
+    private int mBaseW, mBaseH;
+    private final SparseArray<Drawable> mShapeDrawables = new SparseArray<>();
     private int mCursorW, mCursorH;
+    private float mHotX, mHotY;
     private boolean mPressed;
-    private boolean mMoving;
-    private final Runnable mIdleRunnable = () -> {
-        mMoving = false;
-        animate().alpha(0.45f).setDuration(400).start();
-        invalidate();
-    };
-    private final Runnable mStopMovingRunnable = () -> {
-        mMoving = false;
-        invalidate();
-    };
+
     public Touchpad(@NonNull Context context) {
         this(context, null);
     }
@@ -58,7 +56,6 @@ public class Touchpad extends View implements GrabListener, AbstractTouchpad {
     /** Enable the touchpad */
     private void _enable(){
         setVisibility(VISIBLE);
-        if (mDynamic) wake();
         placeMouseAt(currentDisplayMetrics.widthPixels / 2f, currentDisplayMetrics.heightPixels / 2f);
     }
 
@@ -98,59 +95,93 @@ public class Touchpad extends View implements GrabListener, AbstractTouchpad {
     @Override
     protected void onDraw(Canvas canvas) {
         canvas.translate(mMouseX, mMouseY);
-        // Centered cursors have their hotspot in the middle, pointers at the top left
-        if (mCentered) canvas.translate(-mCursorW / 2f, -mCursorH / 2f);
-        if (mDynamic) {
-            float scale = mPressed ? 0.8f : (mMoving ? 1.12f : 1f);
-            canvas.scale(scale, scale, mCentered ? mCursorW / 2f : 0f, mCentered ? mCursorH / 2f : 0f);
+        // Put the click point of the cursor on the mouse position
+        canvas.translate(-mHotX * mCursorW, -mHotY * mCursorH);
+        if (mDynamic && mPressed) {
+            canvas.scale(PRESSED_SCALE, PRESSED_SCALE, mHotX * mCursorW, mHotY * mCursorH);
         }
         mMousePointerDrawable.draw(canvas);
     }
 
-    /** Called by CursorState, may come from any thread */
-    private void onPressedChanged(boolean pressed) {
+    /** Use the cursor for the shape the game asked for (dynamic cursor), or the chosen style otherwise */
+    private void applyShape(int shape) {
+        Drawable shapeDrawable = null;
+        if (mDynamic && shape != CursorStyle.SHAPE_ARROW) {
+            shapeDrawable = mShapeDrawables.get(shape);
+            if (shapeDrawable == null) {
+                shapeDrawable = CursorStyle.loadShape(getContext(), shape);
+                if (shapeDrawable != null) mShapeDrawables.put(shape, shapeDrawable);
+            }
+        }
+        if (mMousePointerDrawable != null) mMousePointerDrawable.clearColorFilter();
+        if (shapeDrawable != null) {
+            float[] hot = CursorStyle.shapeHotspot(shape);
+            mHotX = hot[0];
+            mHotY = hot[1];
+            mCursorW = mCursorH = (int) (SHAPE_SIZE * LauncherPreferences.PREF_MOUSESCALE);
+            mMousePointerDrawable = shapeDrawable;
+        } else {
+            mHotX = mBaseHotX;
+            mHotY = mBaseHotY;
+            mCursorW = mBaseW;
+            mCursorH = mBaseH;
+            mMousePointerDrawable = mBaseDrawable;
+        }
+        mMousePointerDrawable.setBounds(0, 0, mCursorW, mCursorH);
+        applyPressedTint();
+        invalidate();
+    }
+
+    private void applyPressedTint() {
+        if (mDynamic && mPressed) mMousePointerDrawable.setColorFilter(PRESSED_TINT, PorterDuff.Mode.SRC_ATOP);
+        else mMousePointerDrawable.clearColorFilter();
+    }
+
+    /** From CursorState, may come from any thread */
+    @Override
+    public void onPressedChanged(boolean pressed) {
         post(() -> {
             mPressed = pressed;
-            if (mDynamic) {
-                if (pressed) mMousePointerDrawable.setColorFilter(PRESSED_TINT, PorterDuff.Mode.SRC_ATOP);
-                else mMousePointerDrawable.clearColorFilter();
-                wake();
-            }
+            applyPressedTint();
             invalidate();
         });
     }
 
-    /** Bring the cursor back to full opacity and restart the idle timer */
-    private void wake() {
-        removeCallbacks(mIdleRunnable);
-        animate().cancel();
-        setAlpha(1f);
-        postDelayed(mIdleRunnable, IDLE_FADE_DELAY_MS);
+    /** From CursorState, may come from any thread */
+    @Override
+    public void onShapeChanged(int glfwShape) {
+        post(() -> applyShape(glfwShape));
     }
 
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        CursorState.setListener(this::onPressedChanged);
+        CursorState.setListener(this);
+        // The game may have asked for a shape before we existed
+        applyShape(CursorState.getShape());
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         CursorState.setListener(null);
-        removeCallbacks(mIdleRunnable);
-        removeCallbacks(mStopMovingRunnable);
     }
 
     private void init(){
         // Setup mouse pointer
         String style = LauncherPreferences.PREF_CURSOR_STYLE;
         mDynamic = LauncherPreferences.PREF_CURSOR_DYNAMIC;
-        mCentered = CursorStyle.isCentered(style);
-        mMousePointerDrawable = CursorStyle.load(getContext(), style);
+        mBaseDrawable = CursorStyle.load(getContext(), style);
+        boolean centered = CursorStyle.isCentered(style);
+        mBaseHotX = mBaseHotY = centered ? 0.5f : 0f;
         int[] size = CursorStyle.baseSize(style);
-        mCursorW = (int) (size[0] * LauncherPreferences.PREF_MOUSESCALE);
-        mCursorH = (int) (size[1] * LauncherPreferences.PREF_MOUSESCALE);
+        mBaseW = (int) (size[0] * LauncherPreferences.PREF_MOUSESCALE);
+        mBaseH = (int) (size[1] * LauncherPreferences.PREF_MOUSESCALE);
+        mMousePointerDrawable = mBaseDrawable;
+        mHotX = mBaseHotX;
+        mHotY = mBaseHotY;
+        mCursorW = mBaseW;
+        mCursorH = mBaseH;
         mMousePointerDrawable.setBounds(0, 0, mCursorW, mCursorH);
         setFocusable(false);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -184,12 +215,6 @@ public class Touchpad extends View implements GrabListener, AbstractTouchpad {
     public void applyMotionVector(float x, float y) {
         mMouseX = Math.max(0, Math.min(currentDisplayMetrics.widthPixels, mMouseX + x * LauncherPreferences.PREF_MOUSESPEED));
         mMouseY = Math.max(0, Math.min(currentDisplayMetrics.heightPixels, mMouseY + y * LauncherPreferences.PREF_MOUSESPEED));
-        if (mDynamic) {
-            mMoving = true;
-            wake();
-            removeCallbacks(mStopMovingRunnable);
-            postDelayed(mStopMovingRunnable, 150);
-        }
         updateMousePosition();
     }
 

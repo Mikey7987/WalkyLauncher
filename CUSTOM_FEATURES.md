@@ -14,16 +14,25 @@ Main menu -> "Manage installed content": list, enable/disable (renames to `.disa
 Code: `fragments/InstalledContentFragment`.
 
 ## Cursor options
-Settings -> Controls -> Virtual mouse: cursor style (default, arrow, dot, ring, crosshair, custom image) and **Dynamic cursor**
-(shrinks + glows on click, grows slightly while moving, fades when idle).
-Code: `customcontrols/mouse/{Touchpad,CursorStyle,CursorState}`, hook in `CallbackBridge.sendMouseKeycode`.
+Settings -> Controls -> Virtual mouse: cursor style (default, arrow, dot, ring, crosshair, custom image) and **Dynamic cursor**.
+Dynamic cursor changes the cursor *shape* with the context: when the game or a mod calls `glfwSetCursor`, the virtual mouse becomes a
+hand, text I-beam, crosshair, resize arrows (horizontal / vertical / diagonal / all) or a "not allowed" sign. It also shrinks and glows while clicking.
+The normal arrow shape uses the style you picked.
+
+How it works: `GLFW.glfwSetCursor` (JRE stub) -> `CallbackBridge.nativeSetCursorShape` -> `input_bridge_v3.c` ->
+Android `CallbackBridge.onCursorShapeChanged` -> `CursorState` -> `Touchpad`. Native part mirrors how grab state is already relayed.
+Code: `customcontrols/mouse/{Touchpad,CursorStyle,CursorState}`, `jre_lwjgl3glfw/.../GLFW.java`, `jni/input_bridge_v3.c`.
+
+Limit: vanilla Minecraft rarely asks for cursor shapes, so with no mods you will mostly see the arrow. Mods that add cursors
+(e.g. Minecraft Cursor on Modrinth) will make the shapes change. The touch screen itself (tapping menus directly) has no cursor to change.
+Needs the JRE glfw stub and native lib rebuilt (a normal full build does this).
 
 ## Look
 New dark palette with green accent, rounded cards/buttons (`colors.xml`, `styles.xml`, `drawable/bg_*`).
 
 ## Not verified
 None of this has been compiled or run (no Android SDK in the authoring environment). Build with Android Studio / `./gradlew assembleDebug`
-and test on a device. Things worth testing first: installing a mod, a resource pack and a shader; the dynamic cursor in-game; the new menu layout on a small phone.
+and test on a device. Things worth testing first: installing a mod, a resource pack and a shader; the dynamic cursor with a cursor mod installed (also confirm the native build succeeds); the new menu layout on a small phone.
 
 ## Known limits
 - Mod search with "Any" loader can offer versions for a loader your profile doesn't use. Pick a loader in the filter.
